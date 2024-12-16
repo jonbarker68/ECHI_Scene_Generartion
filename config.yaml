@@ -1,0 +1,16 @@
+data_root: /fastdata/acp19rws
+output_root: ${data_root}/CHiME9_Interferers
+
+libri_groups:
+  root: ${data_root}/LibriSpeech
+  sample_rate: 16000
+  block_size: 2 # mins
+  n_blocks: 4
+  p_switch: 0.5
+  spk_per_group: [2, 4]
+  n_channels: 12
+  
+demand:
+  sample_rate: 16000
+  root: ${data_root}/DEMAND
+  n_channels: 4
