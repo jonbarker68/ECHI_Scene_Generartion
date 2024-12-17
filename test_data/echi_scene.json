@@ -1,0 +1,16 @@
+[
+    {
+        "type": "file",
+        "onset": 0,
+        "offset": 264160,
+        "channel": 1,
+        "filename": "1069/133709/1069-133709-0030.flac"
+    },
+    {
+        "type": "file",
+        "onset": 100000,
+        "offset": 337120,
+        "channel": 2,
+        "filename": "1069/133709/1069-133709-0050.flac"
+    }
+]
