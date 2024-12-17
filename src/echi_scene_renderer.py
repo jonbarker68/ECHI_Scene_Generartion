@@ -5,12 +5,13 @@ The scene description is a list of dictionaries, each dictionary represents
 a sound source with a channel, onset, offset and a sound file.
 """
 
+import json
+import logging
+from pathlib import Path
+
 import hydra
 import numpy as np
-import json
 import soundfile as sf
-from pathlib import Path
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,6 @@ def render_scene(scene, audio_root):
     version_base=None, config_path="conf", config_name="echi_scene_renderer_config"
 )
 def main(cfg):
-
     # Load the scene description
     with open(cfg.scene_file, "r", encoding="utf8") as f:
         scene = json.load(f)
