@@ -1,0 +1,6 @@
+audio_root: .
+
+template_file: ./test_data/echi_template.json
+scene_file: ./scene.json
+
+samplerate: 16000
