@@ -4,3 +4,4 @@ scene_file: ./test_data/echi_scene.json
 audio_file: ./test_data/audio.wav
 
 samplerate: 16000
+target_rms: 0.05

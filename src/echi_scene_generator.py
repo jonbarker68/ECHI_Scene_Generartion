@@ -70,7 +70,7 @@ def process_sequence(scene, template, speakers):
     logger.info("Processing a sequence template.")
 
     for element in template["elements"]:
-        scene = generate_scene(scene, element, speakers)
+        scene = generate_scene_node(element, speakers, scene)
     return scene
 
 
@@ -79,7 +79,8 @@ def process_splitter(scene, template, speakers):
     logger.info("Processing a splitter template.")
 
     new_scenes = [
-        generate_scene(scene, element, speakers) for element in template["elements"]
+        generate_scene_node(element, speakers, scene)
+        for element in template["elements"]
     ]
     for new_scene in new_scenes:
         scene = scene.union(new_scene)
@@ -101,8 +102,7 @@ def process_conversation(scene, template, speakers):
         talker = next(speaker for speaker in speakers if speaker.id == talker_id)
         utterance = talker.next()
         random_offset = int(np.random.normal(loc=0, scale=16000))  # TODO: config
-        print(random_offset)
-        start_time = end_time + random_offset
+        start_time = max(0, end_time + random_offset)
         end_time = start_time + utterance["duration"]
         last_talker = talker_id
         scene_element = {
@@ -133,10 +133,10 @@ def process_pause(scene, template):
     return scene
 
 
-def generate_scene(scene, template: dict, speakers):
-    """Generates the scene from the template."""
+def generate_scene_node(template: dict, speakers: list, scene=None):
+    """Generates a node in the scene template."""
     logger.info("Generating the scene from the template.")
-    scene = scene.copy()
+    scene = scene.copy() if scene is not None else set()
     if template["type"] == "sequence":
         scene = process_sequence(scene, template, speakers)
     elif template["type"] == "splitter":
@@ -148,6 +148,16 @@ def generate_scene(scene, template: dict, speakers):
     return scene
 
 
+def generate_scene(template: dict, speakers: list, scene=None):
+    """Generates the scene from the template."""
+    scene = generate_scene_node(template, speakers, scene)
+
+    # remove pause elements - these were only used during generation
+    scene = {utterance for utterance in scene if utterance["type"] != "pause"}
+
+    return scene
+
+
 def save_scene(scene, scene_file):
     """Saves the scene to a file."""
     logger.info(f"Saving the scene to {scene_file}.")
@@ -156,14 +166,9 @@ def save_scene(scene, scene_file):
         json.dump(scene, f, indent=4)
 
 
-@hydra.main(
-    version_base=None, config_path="conf", config_name="echi_scene_generator_config"
-)
-def main(cfg):
-    """Instantiates the template."""
-    logger.info(f"Instantiating {cfg.template_file} to make {cfg.scene_file}")
-
-    libri_index = pd.read_csv("libri_index.csv")
+def make_libri_speakers(libri_index_filename):
+    """Makes a list of speakers from the LibriSpeech dataset."""
+    libri_index = pd.read_csv(libri_index_filename)
     libri_speakers = libri_index.speaker.unique()
     selected_speakers = random.sample(list(libri_speakers), 12)
 
@@ -174,18 +179,23 @@ def main(cfg):
     speakers = [
         Speaker(spkr_df, index) for index, spkr_df in enumerate(spkr_dfs, start=1)
     ]
+    return speakers
 
+
+@hydra.main(
+    version_base=None, config_path="conf", config_name="echi_scene_generator_config"
+)
+def main(cfg):
+    """Instantiates the template."""
+    logger.info(f"Instantiating {cfg.template_file} to make {cfg.scene_file}")
+
+    speakers = make_libri_speakers("libri_index.csv")
     template = json.load(open(cfg.template_file, "r", encoding="utf8"))
 
-    scene = set()  # empty scene for now
-
-    scene = generate_scene(scene, template, speakers)
-
-    # remove pause elements - these were only used during generation
-    scene = {utterance for utterance in scene if utterance["type"] != "pause"}
+    scene = generate_scene(template, speakers)
 
     save_scene(scene, cfg.scene_file)
 
 
 if __name__ == "__main__":
-    main()
+    main()  # type: ignore
