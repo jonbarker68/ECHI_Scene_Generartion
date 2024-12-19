@@ -1,0 +1,6 @@
+duration: 1800
+stagger_duration: 20
+seg_controls:
+  segment: false
+  half_life: 600
+  min_duration: 30

@@ -1,5 +1,7 @@
 # Data, logs, outputs etc
 outputs/
+tmp/
+bin/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

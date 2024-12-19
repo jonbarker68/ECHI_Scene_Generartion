@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-Scene generation is a multi-staged process
+Scene generation is a multi-stage process
 
 ```mermaid
 ---
@@ -10,8 +10,8 @@ config:
   theme: dark
 ---
 flowchart TD
-    A[echi.config] -- template_genarator --> B[template.json]
-    B -- scene_genarator --> C[scene.json]
+    A[echi.config] -- structure_generator --> B[structure.json]
+    B -- scene_generator --> C[scene.json]
     C -- scene_renderer -->DC[audio.wav]
 ```
 
@@ -29,13 +29,13 @@ The scene render will generate multichannel audio from the scene file. This is a
 
 ## 3. Scene Generation
 
-Scene generation will make a low level scene file from the high level template file.
+Scene generation will make a low level scene file from the high level structure file.
 
-### 3.1 Template File Format
+### 3.1 structure File Format
 
 Scenes are described in a nested dictionary format. With objects to represent sequences, splitters, conversations, noises and pauses.
 
-Example template file:
+Example structure file:
 
 ```json
 {
@@ -102,4 +102,4 @@ Example template file:
 
 ### 3.2 Scene Generator
 
-This is a fairly complex process that involves instantiating a template to form a low level `scene.json` file. This is done by recursively walking the template and instantiating each object into a sequence of audio segments. The conversation objects are constructed using rules that govern turn taking and overlap. In sequence, objects are rendered sequentially in time. For splitter objects, each object in the splitter is rendered in parallel, and the object is not considered finished until all objects in the splitter are finished.
+This is a fairly complex process that involves instantiating a structure to form a low level `scene.json` file. This is done by recursively walking the structure and instantiating each object into a sequence of audio segments. The conversation objects are constructed using rules that govern turn taking and overlap. In sequence, objects are rendered sequentially in time. For splitter objects, each object in the splitter is rendered in parallel, and the object is not considered finished until all objects in the splitter are finished.

@@ -65,40 +65,40 @@ def get_last_talker(scene):
     return segment["talker"]
 
 
-def process_sequence(scene, template, speakers):
+def process_sequence(scene, sequence, speakers):
     """Processes a sequence element."""
-    logger.info("Processing a sequence template.")
+    logger.info("Processing a sequence element.")
 
-    for element in template["elements"]:
+    for element in sequence["elements"]:
         scene = generate_scene_node(element, speakers, scene)
     return scene
 
 
-def process_splitter(scene, template, speakers):
+def process_splitter(scene, splitter, speakers):
     """Processes a splitter element."""
-    logger.info("Processing a splitter template.")
+    logger.info("Processing a splitter element.")
 
     new_scenes = [
         generate_scene_node(element, speakers, scene)
-        for element in template["elements"]
+        for element in splitter["elements"]
     ]
     for new_scene in new_scenes:
         scene = scene.union(new_scene)
     return scene
 
 
-def process_conversation(scene, template, speakers):
+def process_conversation(scene, conversation, speakers):
     """Processes a conversation element."""
-    logger.info("Processing a conversation template.")
+    logger.info("Processing a conversation element.")
 
     end_time = get_end_time(scene)
     last_talker = get_last_talker(scene)
-    conversation_end_time = end_time + template["duration"] * SAMPLE_RATE
+    conversation_end_time = end_time + conversation["duration"] * SAMPLE_RATE
 
     while end_time < conversation_end_time:
-        talker_id = random.choice(template["talkers"])
+        talker_id = random.choice(conversation["talkers"])
         while talker_id == last_talker:
-            talker_id = random.choice(template["talkers"])
+            talker_id = random.choice(conversation["talkers"])
         talker = next(speaker for speaker in speakers if speaker.id == talker_id)
         utterance = talker.next()
         random_offset = int(np.random.normal(loc=0, scale=16000))  # TODO: config
@@ -110,7 +110,6 @@ def process_conversation(scene, template, speakers):
             "onset": start_time,
             "offset": end_time,
             "channel": talker_id,
-            "talker": talker_id,
             "filename": utterance["name"],
         }
         scene.add(frozendict(scene_element))
@@ -118,11 +117,11 @@ def process_conversation(scene, template, speakers):
     return scene
 
 
-def process_pause(scene, template):
+def process_pause(scene, pause):
     """Processes a pause element."""
-    logger.info("Processing a pause template.")
+    logger.info("Processing a pause element.")
     end_time = get_end_time(scene)
-    pause_duration = template["duration"]
+    pause_duration = pause["duration"]
     scene_element = {
         "type": "pause",
         "onset": end_time,
@@ -133,24 +132,24 @@ def process_pause(scene, template):
     return scene
 
 
-def generate_scene_node(template: dict, speakers: list, scene=None):
-    """Generates a node in the scene template."""
-    logger.info("Generating the scene from the template.")
+def generate_scene_node(structure: dict, speakers: list, scene=None):
+    """Generates a node in the scene structure."""
+    logger.info("Generating the scene from the structure.")
     scene = scene.copy() if scene is not None else set()
-    if template["type"] == "sequence":
-        scene = process_sequence(scene, template, speakers)
-    elif template["type"] == "splitter":
-        scene = process_splitter(scene, template, speakers)
-    elif template["type"] == "conversation":
-        scene = process_conversation(scene, template, speakers)
-    elif template["type"] == "pause":
-        scene = process_pause(scene, template)
+    if structure["type"] == "sequence":
+        scene = process_sequence(scene, structure, speakers)
+    elif structure["type"] == "splitter":
+        scene = process_splitter(scene, structure, speakers)
+    elif structure["type"] == "conversation":
+        scene = process_conversation(scene, structure, speakers)
+    elif structure["type"] == "pause":
+        scene = process_pause(scene, structure)
     return scene
 
 
-def generate_scene(template: dict, speakers: list, scene=None):
-    """Generates the scene from the template."""
-    scene = generate_scene_node(template, speakers, scene)
+def generate_scene(structure: dict, speakers: list, scene=None):
+    """Generates the scene from the structure."""
+    scene = generate_scene_node(structure, speakers, scene)
 
     # remove pause elements - these were only used during generation
     scene = {utterance for utterance in scene if utterance["type"] != "pause"}
@@ -186,13 +185,13 @@ def make_libri_speakers(libri_index_filename):
     version_base=None, config_path="conf", config_name="echi_scene_generator_config"
 )
 def main(cfg):
-    """Instantiates the template."""
-    logger.info(f"Instantiating {cfg.template_file} to make {cfg.scene_file}")
+    """Instantiates the structure."""
+    logger.info(f"Instantiating {cfg.structure_file} to make {cfg.scene_file}")
 
-    speakers = make_libri_speakers("libri_index.csv")
-    template = json.load(open(cfg.template_file, "r", encoding="utf8"))
+    speakers = make_libri_speakers(cfg.libri_index_file)
+    structure = json.load(open(cfg.structure_file, "r", encoding="utf8"))
 
-    scene = generate_scene(template, speakers)
+    scene = generate_scene(structure, speakers)
 
     save_scene(scene, cfg.scene_file)
 
