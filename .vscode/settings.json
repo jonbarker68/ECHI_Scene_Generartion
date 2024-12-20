@@ -4,6 +4,25 @@
         "echi",
         "libri",
         "librispeech",
-        "spkr"
-    ]
+        "newaxis",
+        "spkr",
+        "tobytes"
+    ],
+    "cSpell.spellCheckOnlyWorkspaceFiles": true,
+    "cSpell.ignorePaths": [
+        "package-lock.json",
+        "node_modules",
+        "vscode-extension",
+        ".git/{info,lfs,logs,refs,objects}/**",
+        ".git/{index,*refs,*HEAD}",
+        ".vscode",
+        ".vscode-insiders",
+        ".venv/**",
+        ".gitignore"
+    ],
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

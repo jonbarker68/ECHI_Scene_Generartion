@@ -15,7 +15,7 @@ from pathlib import Path
 
 import numpy as np
 import soundfile as sf  # type: ignore
-import webrtcvad
+import webrtcvad  # type: ignore
 from tqdm import tqdm
 
 from librispeech_utils import parse_file_name

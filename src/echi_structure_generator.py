@@ -86,7 +86,7 @@ def make_table(speakers, duration, stagger=0, segmenter=None):
             make_conversation_segment(sgs, d)
             for sgs, d in zip(speaker_groups, durations)
         ]
-        node = {"type": "sequence", "talkers": speakers, "elements": conversations}
+        node = {"type": "sequence", "speakers": speakers, "elements": conversations}
 
     if stagger:
         node = {
@@ -110,7 +110,7 @@ def make_parallel_conversations(
     ]
     structure = {
         "type": "sequence",
-        "talkers": speakers,
+        "speakers": speakers,
         "elements": [{"type": "splitter", "elements": tables}],
     }
 

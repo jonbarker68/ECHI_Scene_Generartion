@@ -24,5 +24,9 @@ dev = [
     "mypy>=1.13.0",
     "pandas-stubs>=2.2.3.241126",
     "pre-commit>=4.0.1",
+    "pytest>=8.3.4",
     "types-tqdm>=4.67.0.20241119",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

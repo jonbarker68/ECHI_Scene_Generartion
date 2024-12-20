@@ -25,7 +25,7 @@ The scene file is a list of dictionaries, each dictionary representing a single 
 
 ### 2.2 Scene Renderer
 
-The scene render will generate multichannel audio from the scene file. This is a straightforward process of pre-allocation a n-channels by n-samples array and then filling in the samples from the audio segments.
+The scene render will generate multichannel audio from the scene file. This is a straightforward process of pre-allocating an n-channels by n-samples array and then filling in the samples from the audio segments.
 
 ## 3. Scene Generation
 
@@ -40,58 +40,58 @@ Example structure file:
 ```json
 {
     "type": "sequence",
-    "talkers": [1,2,3,4,5,6,7,8,9,10,11,12],
+    "speakers": [1,2,3,4,5,6,7,8,9,10,11,12],
     "elements": [
        {
         "type": "splitter",
         "elements": [
             {"type": "sequence",
-             "talkers": [1,2,3,4],
+             "speakers": [1,2,3,4],
              "elements": [
                     {"type": "pause",
                      "duration": 20
                     },
                     {"type": "conversation",
-                     "talkers": [1,2,3],
+                     "speakers": [1,2,3],
                      "duration": 120
                     },
                     {"type": "conversation",
-                     "talkers": [1,3,4],
+                     "speakers": [1,3,4],
                      "duration": 120
                     },
                     {"type": "conversation",
-                     "talkers": [3,4],
+                     "speakers": [3,4],
                      "duration": 120
                     }
                 ]
             },
             {"type": "sequence",
-             "talkers": [5,6,7,8],
+             "speakers": [5,6,7,8],
              "elements":  [
                     {"type": "conversation",
-                     "talkers": [5,6,7,8],
+                     "speakers": [5,6,7,8],
                      "duration": 120
                     },
                     {"type": "splitter",
                     "elements": [
                             {"type": "conversation",
-                            "talkers": [5,6],
+                            "speakers": [5,6],
                             "duration": 120
                             },
                             {"type": "conversation",
-                            "talkers": [7,8],
+                            "speakers": [7,8],
                             "duration": 120
                             }
                         ]
                     },
                     {"type": "conversation",
-                     "talkers": [5,6,7,8],
+                     "speakers": [5,6,7,8],
                      "duration": 120
                     }
                 ]
             },
             {"type": "conversation",
-             "talkers": [9,10,11,12],
+             "speakers": [9,10,11,12],
              "duration": 360
             }
         ]

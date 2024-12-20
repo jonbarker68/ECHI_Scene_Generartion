@@ -23,13 +23,13 @@ SAMPLE_RATE = 16000
 class Speaker:
     """Represents a speaker in the scenario."""
 
-    def __init__(self, df, id):
+    def __init__(self, df, offset_scale=0):
         name = df.iloc[0].speaker
         self.name = name
-        self.id = id
         self.utterance_index = 0
         self.df = df
         self.max_segments = len(df)
+        self.offset_scale = offset_scale
 
     def next(self):
         """Dummy method for generating the next utterance."""
@@ -40,6 +40,10 @@ class Speaker:
             self.utterance_index = 0
         utterance = {"name": item.file_name, "duration": int(item.length)}
         return utterance
+
+    def get_offset(self):
+        """Randomness in speaker start."""
+        return int(np.random.normal(loc=0, scale=self.offset_scale))
 
 
 def get_last_segment(scene):
@@ -57,12 +61,12 @@ def get_end_time(scene):
     return segment["offset"]
 
 
-def get_last_talker(scene):
+def get_last_speaker(scene):
     """Gets the id of the last person to have spoken."""
     segment = get_last_segment(scene)
-    if segment is None or "talker" not in segment:
+    if segment is None or "speaker" not in segment:
         return 0
-    return segment["talker"]
+    return segment["speaker"]
 
 
 def process_sequence(scene, sequence, speakers):
@@ -92,24 +96,24 @@ def process_conversation(scene, conversation, speakers):
     logger.info("Processing a conversation element.")
 
     end_time = get_end_time(scene)
-    last_talker = get_last_talker(scene)
+    last_speaker = get_last_speaker(scene)
     conversation_end_time = end_time + conversation["duration"] * SAMPLE_RATE
 
     while end_time < conversation_end_time:
-        talker_id = random.choice(conversation["talkers"])
-        while talker_id == last_talker:
-            talker_id = random.choice(conversation["talkers"])
-        talker = next(speaker for speaker in speakers if speaker.id == talker_id)
-        utterance = talker.next()
-        random_offset = int(np.random.normal(loc=0, scale=16000))  # TODO: config
+        speaker_id = random.choice(conversation["speakers"])
+        while speaker_id == last_speaker:
+            speaker_id = random.choice(conversation["speakers"])
+        speaker = speakers[speaker_id - 1]
+        utterance = speaker.next()
+        random_offset = speaker.get_offset()
         start_time = max(0, end_time + random_offset)
         end_time = start_time + utterance["duration"]
-        last_talker = talker_id
+        last_speaker = speaker_id
         scene_element = {
             "type": "utterance",
             "onset": start_time,
             "offset": end_time,
-            "channel": talker_id,
+            "channel": speaker_id,
             "filename": utterance["name"],
         }
         scene.add(frozendict(scene_element))
@@ -165,19 +169,15 @@ def save_scene(scene, scene_file):
         json.dump(scene, f, indent=4)
 
 
-def make_libri_speakers(libri_index_filename):
+def make_libri_speakers(libri_index_filename, selected_speakers, offset_scale=0):
     """Makes a list of speakers from the LibriSpeech dataset."""
     libri_index = pd.read_csv(libri_index_filename)
-    libri_speakers = libri_index.speaker.unique()
-    selected_speakers = random.sample(list(libri_speakers), 12)
 
     spkr_dfs = [
         libri_index[libri_index.speaker == spkr].sort_values(by="file_name")
         for spkr in selected_speakers
     ]
-    speakers = [
-        Speaker(spkr_df, index) for index, spkr_df in enumerate(spkr_dfs, start=1)
-    ]
+    speakers = [Speaker(spkr_df, offset_scale) for spkr_df in spkr_dfs]
     return speakers
 
 
@@ -188,7 +188,9 @@ def main(cfg):
     """Instantiates the structure."""
     logger.info(f"Instantiating {cfg.structure_file} to make {cfg.scene_file}")
 
-    speakers = make_libri_speakers(cfg.libri_index_file)
+    speakers = make_libri_speakers(
+        cfg.libri_index_file, cfg.speaker.ids, cfg.speaker.offset_scale
+    )
     structure = json.load(open(cfg.structure_file, "r", encoding="utf8"))
 
     scene = generate_scene(structure, speakers)

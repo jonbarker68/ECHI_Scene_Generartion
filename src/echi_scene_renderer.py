@@ -13,7 +13,7 @@ from pathlib import Path
 
 import hydra
 import numpy as np
-import soundfile as sf
+import soundfile as sf  # type: ignore
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
