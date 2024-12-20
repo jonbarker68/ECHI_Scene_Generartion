@@ -1,0 +1,17 @@
+n_sessions: 40
+master_file: ./master.json
+
+seg_controls:
+  segment: true
+  half_life: 600
+  min_duration: 60
+
+structure:
+  duration: 1800
+  table_sizes: [4, 4, 4]
+  stagger_duration: 20
+
+speaker:
+  libri_index_file: ./data/libri_index.csv
+  ids: [150, 3240, 5463, 6437, 5022, 1553, 32, 6078, 8425, 6367, 8629, 1355]
+  offset_scale: 16000

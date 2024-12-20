@@ -158,13 +158,14 @@ def generate_scene(structure: dict, speakers: list, scene=None):
     # remove pause elements - these were only used during generation
     scene = {utterance for utterance in scene if utterance["type"] != "pause"}
 
+    scene = [dict(utterance) for utterance in scene]
+
     return scene
 
 
 def save_scene(scene, scene_file):
     """Saves the scene to a file."""
     logger.info(f"Saving the scene to {scene_file}.")
-    scene = [dict(utterance) for utterance in scene]
     with open(scene_file, "w", encoding="utf8") as f:
         json.dump(scene, f, indent=4)
 

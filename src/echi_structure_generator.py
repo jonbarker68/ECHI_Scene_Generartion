@@ -39,7 +39,6 @@ def make_speaker_groups(table_sizes):
 
 def make_conversation_segment(speaker_groups, duration):
     if len(speaker_groups) == 1:
-        print(speaker_groups)
         return {
             "type": "conversation",
             "speakers": speaker_groups[0],
