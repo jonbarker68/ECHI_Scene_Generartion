@@ -79,15 +79,15 @@ def channel_normalization(audio, target_rms, clip=True):
     return audio
 
 
-def process_scene(scene, audio_root, audio_file, target_rms, samplerate):
+def process_scene(scene, audio_root, audio_out_filename, target_rms, samplerate):
     """Renders the scene into an audio signal."""
     audio = render_scene(scene, Path(audio_root))
 
     audio = channel_normalization(audio, target_rms)
 
     # Write the audio signal to a file
-    logger.info(f"Writing audio to {audio_file}")
-    sf.write(audio_file, audio.T, samplerate=samplerate)
+    logger.info(f"Writing audio to {audio_out_filename}")
+    sf.write(audio_out_filename, audio.T, samplerate=samplerate)
 
 
 @hydra.main(
@@ -108,12 +108,15 @@ def main(cfg):
     else:
         # ...this is a single scene.
         scenes = [input_data]
-        outfile_names = [cfg.audio_file]
+        outfile_names = [cfg.audio_out_filename]
+
+    # Add path to the output filenames
+    outfile_names = [Path(cfg.audio_out_dir) / name for name in outfile_names]
 
     # Run the rendering process for each scene
     for scene, outfile_name in tqdm(zip(scenes, outfile_names), "Processing sessions"):
         process_scene(
-            scene, cfg.audio_root, outfile_name, cfg.target_rms, cfg.samplerate
+            scene, cfg.audio_in_root, outfile_name, cfg.target_rms, cfg.samplerate
         )
 
 
