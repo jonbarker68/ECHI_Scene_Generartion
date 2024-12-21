@@ -1,12 +1,19 @@
 {
     "cSpell.words": [
         "cumsum",
+        "dtick",
         "echi",
+        "hoverinfo",
         "libri",
         "librispeech",
         "newaxis",
+        "showlegend",
         "spkr",
-        "tobytes"
+        "tickmode",
+        "tobytes",
+        "toself",
+        "xaxis",
+        "yaxis"
     ],
     "cSpell.spellCheckOnlyWorkspaceFiles": true,
     "cSpell.ignorePaths": [
