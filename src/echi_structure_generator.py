@@ -58,7 +58,7 @@ def make_conversation_segment(speaker_groups, duration):
         }
 
 
-def make_table(speakers, duration, stagger=0, segmenter=None):
+def make_table(speakers, duration, segmenter=None):
     """Make a conversation pattern for a table with a given set of speaker."""
 
     n_speakers = len(speakers)
@@ -87,26 +87,15 @@ def make_table(speakers, duration, stagger=0, segmenter=None):
         ]
         node = {"type": "sequence", "speakers": speakers, "elements": conversations}
 
-    if stagger:
-        node = {
-            "type": "sequence",
-            "elements": [{"type": "pause", "duration": stagger}, node],
-        }
     return node
 
 
-def make_parallel_conversations(
-    table_sizes, duration, stagger_duration=0, segmenter=None
-):
+def make_parallel_conversations(table_sizes, duration, segmenter=None):
     """Generate a random structure for an ECHI session"""
     n_speakers = sum(table_sizes)
     speakers = list(range(1, n_speakers + 1))
     speaker_groups = make_speaker_groups(table_sizes)
-    staggers = np.arange(len(table_sizes)) * stagger_duration
-    tables = [
-        make_table(speakers, duration, int(stagger), segmenter)
-        for speakers, stagger in zip(speaker_groups, staggers)
-    ]
+    tables = [make_table(speakers, duration, segmenter) for speakers in speaker_groups]
     structure = {
         "type": "sequence",
         "speakers": speakers,
@@ -136,7 +125,6 @@ def main(cfg):
     structure = make_parallel_conversations(
         table_sizes=[4, 4, 4],
         duration=cfg.duration,
-        stagger_duration=cfg.stagger_duration,
         segmenter=segmenter,
     )
 

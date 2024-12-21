@@ -79,21 +79,42 @@ def channel_normalization(audio, target_rms, clip=True):
     return audio
 
 
+def process_scene(scene, audio_root, audio_file, target_rms, samplerate):
+    """Renders the scene into an audio signal."""
+    audio = render_scene(scene, Path(audio_root))
+
+    audio = channel_normalization(audio, target_rms)
+
+    # Write the audio signal to a file
+    logger.info(f"Writing audio to {audio_file}")
+    sf.write(audio_file, audio.T, samplerate=samplerate)
+
+
 @hydra.main(
     version_base=None, config_path="conf", config_name="echi_scene_renderer_config"
 )
 def main(cfg):
+    """Render the scene description into an audio signal."""
+
     # Load the scene description
     with open(cfg.scene_file, "r", encoding="utf8") as f:
-        scene = json.load(f)
+        input_data = json.load(f)
 
-    audio = render_scene(scene, Path(cfg.audio_root))
+    # Can either process a single scene or a list of sessions
+    if "session" in input_data[0]:
+        # This is a list of sessions...
+        scenes = [session["scene"] for session in input_data]
+        outfile_names = [f"{session['session']}.wav" for session in input_data]
+    else:
+        # ...this is a single scene.
+        scenes = [input_data]
+        outfile_names = [cfg.audio_file]
 
-    audio = channel_normalization(audio, cfg.target_rms)
-
-    # Write the audio signal to a file
-    logger.info(f"Writing audio to {cfg.audio_file}")
-    sf.write(cfg.audio_file, audio.T, samplerate=cfg.samplerate)
+    # Run the rendering process for each scene
+    for scene, outfile_name in tqdm(zip(scenes, outfile_names), "Processing sessions"):
+        process_scene(
+            scene, cfg.audio_root, outfile_name, cfg.target_rms, cfg.samplerate
+        )
 
 
 if __name__ == "__main__":
