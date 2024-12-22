@@ -48,6 +48,18 @@ Note that for most scripts there are hydra configurations that are set up so tha
 
 The output will appear in a browser window.
 
+## Extras
+
+### Segmenting the LibriSpeech audio files
+
+Can segment the LibriSpeech audio files into smaller segments using the following command:
+
+```bash
+python src/segment_audio.py wavfile="*.flac"
+```
+
+This will create a new directory `data/LibriSpeech_segmented/` containing the segmented audio files with the same directory structure as the original LibriSpeech dataset. You can then link to this directory instead of the original LibriSpeech directory and make a new index file, and then rebuild the master session file with the smaller segments.
+
 ## TODO
 
 - Does not yet handle the diffuse noise speakers

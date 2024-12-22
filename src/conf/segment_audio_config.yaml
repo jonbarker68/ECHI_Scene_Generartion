@@ -1,0 +1,4 @@
+wavfile: ???
+aggressiveness: 1
+output_dir: data/LibriSpeech_segmented
+input_dir: data/LibriSpeech/
