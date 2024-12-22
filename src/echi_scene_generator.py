@@ -99,7 +99,7 @@ def process_conversation(scene, conversation, speakers):
     last_speaker = get_last_speaker(scene)
     conversation_end_time = end_time + conversation["duration"] * SAMPLE_RATE
 
-    while end_time < conversation_end_time:
+    while True:
         speaker_id = random.choice(conversation["speakers"])
         while speaker_id == last_speaker:
             speaker_id = random.choice(conversation["speakers"])
@@ -108,6 +108,8 @@ def process_conversation(scene, conversation, speakers):
         random_offset = speaker.get_offset()
         start_time = max(0, end_time + random_offset)
         end_time = start_time + utterance["duration"]
+        if end_time > conversation_end_time:
+            break  # Break just before overshooting the conversation duration
         last_speaker = speaker_id
         scene_element = {
             "type": "utterance",

@@ -43,7 +43,7 @@ Note that for most scripts there are hydra configurations that are set up so tha
 5. Visualise the session structures (optional).
 
    ```bash
-   python src/echo_visualiser.py session=session_001
+   python src/echi_visualiser.py session=session_001
    ```
 
 The output will appear in a browser window.
