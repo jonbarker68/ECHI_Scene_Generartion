@@ -1,0 +1,10 @@
+speech_index_file: data/libri_index.csv
+utterance_root: data/LibriSpeech/train-clean-100
+samplerate: 16000
+n_speakers: 20
+duration: 1800
+cache_dir: .cache_dir
+output_file: data/libri_speech_babbled.wav
+base_duration: 7200
+target_rms: 0.05
+seed: 0
