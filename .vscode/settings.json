@@ -3,6 +3,7 @@
         "cumsum",
         "dtick",
         "echi",
+        "frombuffer",
         "hoverinfo",
         "libri",
         "librispeech",
@@ -12,6 +13,7 @@
         "tickmode",
         "tobytes",
         "toself",
+        "venv",
         "xaxis",
         "yaxis"
     ],

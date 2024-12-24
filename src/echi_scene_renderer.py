@@ -9,12 +9,16 @@ roughly the same RMS level during the non-silence parts.
 
 import json
 import logging
+from functools import partial
 from pathlib import Path
 
 import hydra
 import numpy as np
+import pandas as pd
 import soundfile as sf  # type: ignore
 from tqdm import tqdm
+
+from babble_generator import generate_babble
 
 logger = logging.getLogger(__name__)
 
@@ -79,11 +83,37 @@ def channel_normalization(audio, target_rms, clip=True):
     return audio
 
 
-def process_scene(scene, audio_root, audio_out_filename, target_rms, samplerate):
+def process_scene(
+    scene,
+    audio_root,
+    audio_out_filename,
+    target_rms,
+    samplerate,
+    n_diffuse_channels=0,
+    babble_generator=None,
+):
     """Renders the scene into an audio signal."""
+
     audio = render_scene(scene, Path(audio_root))
 
     audio = channel_normalization(audio, target_rms)
+
+    # Add diffuse noise to the audio signal
+
+    if n_diffuse_channels > 0 and babble_generator is not None:
+        logger.info(f"Adding {n_diffuse_channels} diffuse channels.")
+        babble = np.zeros((n_diffuse_channels, audio.shape[1]))
+        for i in range(n_diffuse_channels):
+            duration = audio.shape[1]
+            # The seed is made from a hash of the scene and the index i
+            # to ensure that the babble is different for each channel but reproducible
+            seed = hash(json.dumps(scene) + str(i)) % (2**32 - 1)
+            babble_chan = babble_generator(
+                duration=duration, base_duration=duration * 4, seed=seed
+            )
+            rms_level = np.sqrt(np.mean(babble_chan**2))
+            babble[i, :] = babble_chan / rms_level * target_rms
+        audio = np.concatenate((audio, babble), axis=0)
 
     # Write the audio signal to a file
     logger.info(f"Writing audio to {audio_out_filename}")
@@ -113,10 +143,28 @@ def main(cfg):
     # Add path to the output filenames
     outfile_names = [Path(cfg.audio_out_dir) / name for name in outfile_names]
 
+    # Create a babble generator if needed
+    babble_generator = (
+        partial(
+            generate_babble,
+            speech_index=pd.read_csv(cfg.diffuse.utterance_index),
+            utterance_root=cfg.audio_in_root,
+            n_speakers=cfg.diffuse.n_speaker_babble,
+        )
+        if cfg.diffuse.n_channels > 0
+        else None
+    )
+
     # Run the rendering process for each scene
     for scene, outfile_name in tqdm(zip(scenes, outfile_names), "Processing sessions"):
         process_scene(
-            scene, cfg.audio_in_root, outfile_name, cfg.target_rms, cfg.samplerate
+            scene,
+            cfg.audio_in_root,
+            outfile_name,
+            cfg.target_rms,
+            cfg.samplerate,
+            cfg.diffuse.n_channels,
+            babble_generator,
         )
 
 

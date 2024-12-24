@@ -1,4 +1,9 @@
-"""Adapted from https://github.com/wiseman/py-webrtcvad"""
+"""segments speech audio files using the WebRTC VAD.
+
+i.e., a longer speech recording with non-speech pauses is turned into a sequence
+of end-pointed speech segments.
+
+Adapted from https://github.com/wiseman/py-webrtcvad"""
 
 import collections
 from pathlib import Path
@@ -100,8 +105,8 @@ def vad_collector(sample_rate, frame_duration_ms, padding_duration_ms, vad, fram
     num_padding_frames = int(padding_duration_ms / frame_duration_ms)
     # We use a deque for our sliding window/ring buffer.
     ring_buffer = collections.deque(maxlen=num_padding_frames)
-    # We have two states: TRIGGERED and NOTTRIGGERED. We start in the
-    # NOTTRIGGERED state.
+    # We have two states: TRIGGERED and NOT_TRIGGERED. We start in the
+    # NOT_TRIGGERED state.
     triggered = False
 
     voiced_frames = []
@@ -111,13 +116,13 @@ def vad_collector(sample_rate, frame_duration_ms, padding_duration_ms, vad, fram
         if not triggered:
             ring_buffer.append((frame, is_speech))
             num_voiced = len([f for f, speech in ring_buffer if speech])
-            # If we're NOTTRIGGERED and more than 90% of the frames in
+            # If we're NOT_TRIGGERED and more than 90% of the frames in
             # the ring buffer are voiced frames, then enter the
             # TRIGGERED state.
-            if num_voiced > 0.9 * ring_buffer.maxlen:
+            if ring_buffer.maxlen is not None and num_voiced > 0.9 * ring_buffer.maxlen:
                 triggered = True
                 # We want to yield all the audio we see from now until
-                # we are NOTTRIGGERED, but we have to start with the
+                # we are NOT_TRIGGERED, but we have to start with the
                 # audio that's already in the ring buffer.
                 for f, s in ring_buffer:
                     voiced_frames.append(f)
@@ -129,9 +134,12 @@ def vad_collector(sample_rate, frame_duration_ms, padding_duration_ms, vad, fram
             ring_buffer.append((frame, is_speech))
             num_unvoiced = len([f for f, speech in ring_buffer if not speech])
             # If more than 90% of the frames in the ring buffer are
-            # unvoiced, then enter NOTTRIGGERED and yield whatever
+            # unvoiced, then enter NOT_TRIGGERED and yield whatever
             # audio we've collected.
-            if num_unvoiced > 0.9 * ring_buffer.maxlen:
+            if (
+                ring_buffer.maxlen is not None
+                and num_unvoiced > 0.9 * ring_buffer.maxlen
+            ):
                 triggered = False
                 yield b"".join([f.bytes for f in voiced_frames])
                 ring_buffer.clear()
