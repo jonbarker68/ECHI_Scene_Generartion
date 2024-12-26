@@ -1,0 +1,3 @@
+_target_: src.config.MasterConfig
+n_sessions: 40
+seed: 0

@@ -1,6 +1,9 @@
 """ECHI scene generation script.
 
 Reads a template file and instantiates it to make the low level scene file.
+
+usage:
+python src/echi_scene_generator.py +input_file=./test_data/echi_structure.json +output_file=scene.json +speaker_id="[150, 3240, 5463, 6437, 5022, 1553, 32, 6078, 8425, 6367, 8629, 1355]"
 """
 
 import json
@@ -16,8 +19,6 @@ logging.basicConfig()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
-
-SAMPLE_RATE = 16000
 
 
 class Speaker:
@@ -69,21 +70,21 @@ def get_last_speaker(scene):
     return segment["speaker"]
 
 
-def process_sequence(scene, sequence, speakers):
+def process_sequence(scene, sequence, speakers, sample_rate):
     """Processes a sequence element."""
     logger.info("Processing a sequence element.")
 
     for element in sequence["elements"]:
-        scene = generate_scene_node(element, speakers, scene)
+        scene = generate_scene_node(element, speakers, sample_rate, scene)
     return scene
 
 
-def process_splitter(scene, splitter, speakers):
+def process_splitter(scene, splitter, speakers, sample_rate):
     """Processes a splitter element."""
     logger.info("Processing a splitter element.")
 
     new_scenes = [
-        generate_scene_node(element, speakers, scene)
+        generate_scene_node(element, speakers, sample_rate, scene)
         for element in splitter["elements"]
     ]
     for new_scene in new_scenes:
@@ -91,13 +92,13 @@ def process_splitter(scene, splitter, speakers):
     return scene
 
 
-def process_conversation(scene, conversation, speakers):
+def process_conversation(scene, conversation, speakers, sample_rate):
     """Processes a conversation element."""
     logger.info("Processing a conversation element.")
 
     end_time = get_end_time(scene)
     last_speaker = get_last_speaker(scene)
-    conversation_end_time = end_time + conversation["duration"] * SAMPLE_RATE
+    conversation_end_time = end_time + conversation["duration"] * sample_rate
 
     while True:
         speaker_id = random.choice(conversation["speakers"])
@@ -123,7 +124,7 @@ def process_conversation(scene, conversation, speakers):
     return scene
 
 
-def process_pause(scene, pause):
+def process_pause(scene, pause, sample_rate):
     """Processes a pause element."""
     logger.info("Processing a pause element.")
     end_time = get_end_time(scene)
@@ -131,31 +132,31 @@ def process_pause(scene, pause):
     scene_element = {
         "type": "pause",
         "onset": end_time,
-        "offset": end_time + pause_duration * SAMPLE_RATE,
+        "offset": end_time + pause_duration * sample_rate,
         "channel": 0,
     }
     scene.add(frozendict(scene_element))
     return scene
 
 
-def generate_scene_node(structure: dict, speakers: list, scene=None):
+def generate_scene_node(structure: dict, speakers: list, sample_rate, scene=None):
     """Generates a node in the scene structure."""
     logger.info("Generating the scene from the structure.")
     scene = scene.copy() if scene is not None else set()
     if structure["type"] == "sequence":
-        scene = process_sequence(scene, structure, speakers)
+        scene = process_sequence(scene, structure, speakers, sample_rate)
     elif structure["type"] == "splitter":
-        scene = process_splitter(scene, structure, speakers)
+        scene = process_splitter(scene, structure, speakers, sample_rate)
     elif structure["type"] == "conversation":
-        scene = process_conversation(scene, structure, speakers)
+        scene = process_conversation(scene, structure, speakers, sample_rate)
     elif structure["type"] == "pause":
-        scene = process_pause(scene, structure)
+        scene = process_pause(scene, structure, sample_rate)
     return scene
 
 
-def generate_scene(structure: dict, speakers: list, scene=None):
+def generate_scene(structure: dict, speakers: list, sample_rate, scene=None):
     """Generates the scene from the structure."""
-    scene = generate_scene_node(structure, speakers, scene)
+    scene = generate_scene_node(structure, speakers, sample_rate, scene)
 
     # remove pause elements - these were only used during generation
     scene = {utterance for utterance in scene if utterance["type"] != "pause"}
@@ -184,21 +185,19 @@ def make_libri_speakers(libri_index_filename, selected_speakers, offset_scale=0)
     return speakers
 
 
-@hydra.main(
-    version_base=None, config_path="conf", config_name="echi_scene_generator_config"
-)
+@hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg):
     """Instantiates the structure."""
-    logger.info(f"Instantiating {cfg.structure_file} to make {cfg.scene_file}")
+    logger.info(f"Instantiating {cfg.input_file} to make {cfg.output_file}")
 
     speakers = make_libri_speakers(
-        cfg.libri_index_file, cfg.speaker.ids, cfg.speaker.offset_scale
+        cfg.paths.utt_index, cfg.speaker_ids, cfg.speaker.offset_scale
     )
-    structure = json.load(open(cfg.structure_file, "r", encoding="utf8"))
+    structure = json.load(open(cfg.input_file, "r", encoding="utf8"))
 
-    scene = generate_scene(structure, speakers)
+    scene = generate_scene(structure, speakers, cfg.audio.sample_rate)
 
-    save_scene(scene, cfg.scene_file)
+    save_scene(scene, cfg.output_file)
 
 
 if __name__ == "__main__":

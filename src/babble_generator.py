@@ -1,4 +1,8 @@
-"""Generate N speaker babble from a single speaker dataset."""
+"""Generate N speaker babble from a single speaker dataset.
+
+Usage:
+python src/babble_generator.py +output_file=output.wav
+"""
 
 import logging
 from pathlib import Path
@@ -66,30 +70,34 @@ def generate_babble(
     return babble
 
 
-@hydra.main(
-    version_base=None, config_path="conf", config_name="babble_generator_config"
-)
+@hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg):
     """Generate N speaker babble"""
 
-    speech_index = pd.read_csv(cfg.speech_index_file)
+    if "output_file" not in cfg or not cfg.output_file:
+        raise ValueError("output_file not set in config")
+
+    speech_index = pd.read_csv(cfg.paths.utt_index)
 
     babble = generate_babble(
         speech_index,
-        cfg.utterance_root,
-        cfg.duration * cfg.samplerate,
-        cfg.n_speakers,
-        cfg.base_duration * cfg.samplerate,
-        cfg.seed,
+        cfg.paths.libri_root,
+        cfg.structure.duration * cfg.audio.sample_rate,
+        cfg.diffuse.n_speaker_babble,
+        cfg.structure.duration * 4 * cfg.audio.sample_rate,
+        cfg.master.seed,
     )
 
     # Normalize the babble to the target RMS level
     rms_level = np.sqrt(np.mean(babble**2))
-    babble = babble / rms_level * cfg.target_rms
+    babble = babble / rms_level * cfg.audio.target_rms
 
-    with sf.SoundFile(cfg.output_file, "w", samplerate=cfg.samplerate, channels=1) as f:
+    with sf.SoundFile(
+        cfg.output_file, "w", samplerate=cfg.audio.sample_rate, channels=1
+    ) as f:
         f.write(babble)
 
 
 if __name__ == "__main__":
+    main()
     main()

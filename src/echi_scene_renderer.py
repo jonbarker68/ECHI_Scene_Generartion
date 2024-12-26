@@ -88,7 +88,7 @@ def process_scene(
     audio_root,
     audio_out_filename,
     target_rms,
-    samplerate,
+    sample_rate,
     n_diffuse_channels=0,
     babble_generator=None,
 ):
@@ -117,17 +117,15 @@ def process_scene(
 
     # Write the audio signal to a file
     logger.info(f"Writing audio to {audio_out_filename}")
-    sf.write(audio_out_filename, audio.T, samplerate=samplerate)
+    sf.write(audio_out_filename, audio.T, samplerate=sample_rate)
 
 
-@hydra.main(
-    version_base=None, config_path="conf", config_name="echi_scene_renderer_config"
-)
+@hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg):
     """Render the scene description into an audio signal."""
 
     # Load the scene description
-    with open(cfg.scene_file, "r", encoding="utf8") as f:
+    with open(cfg.paths.master_file, "r", encoding="utf8") as f:
         input_data = json.load(f)
 
     # Can either process a single scene or a list of sessions
@@ -141,14 +139,14 @@ def main(cfg):
         outfile_names = [cfg.audio_out_filename]
 
     # Add path to the output filenames
-    outfile_names = [Path(cfg.audio_out_dir) / name for name in outfile_names]
+    outfile_names = [Path(cfg.paths.audio_dir) / name for name in outfile_names]
 
     # Create a babble generator if needed
     babble_generator = (
         partial(
             generate_babble,
-            speech_index=pd.read_csv(cfg.diffuse.utterance_index),
-            utterance_root=cfg.audio_in_root,
+            speech_index=pd.read_csv(cfg.paths.utt_index),
+            utterance_root=cfg.paths.libri_root,
             n_speakers=cfg.diffuse.n_speaker_babble,
         )
         if cfg.diffuse.n_channels > 0
@@ -159,10 +157,10 @@ def main(cfg):
     for scene, outfile_name in tqdm(zip(scenes, outfile_names), "Processing sessions"):
         process_scene(
             scene,
-            cfg.audio_in_root,
+            cfg.paths.libri_root,
             outfile_name,
-            cfg.target_rms,
-            cfg.samplerate,
+            cfg.audio.target_rms,
+            cfg.audio.sample_rate,
             cfg.diffuse.n_channels,
             babble_generator,
         )

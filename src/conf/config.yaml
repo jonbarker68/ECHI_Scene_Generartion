@@ -1,0 +1,20 @@
+defaults:
+  - _self_
+  - master: default
+  - audio: default
+  - paths: default
+  - structure: default
+  - segmenter: default
+  - speaker: default
+  - diffuse: default
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
+
+output_file: ???
+
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: multirun/${now:%Y-%m-%d_%H-%M-%S}
+    subdir: ${hydra.job.num}

@@ -80,18 +80,17 @@ def build_structure(structure_cfg, seg_controls):
     return structure
 
 
-@hydra.main(
-    version_base=None, config_path="conf", config_name="echi_build_master_config"
-)
+@hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg):
     """Build the ECHI master file."""
 
-    n_sessions = cfg.n_sessions
+    n_sessions = cfg.master.n_sessions
 
-    logging.info(f"Build master json for {cfg.n_sessions} sessions")
+    logging.info(f"Build master json for {cfg.master.n_sessions} sessions")
     master = [
         {
             "session": f"session_{i:03d}",
+            "sample_rate": cfg.audio.sample_rate,
             "structure": None,
             "speakers": None,
             "scene": None,
@@ -102,7 +101,7 @@ def main(cfg):
     # Build a structure for each session
     for session_dict in tqdm(master, "Building scene structures"):
         session_dict["duration"] = cfg.structure.duration
-        session_dict["structure"] = build_structure(cfg.structure, cfg.seg_controls)
+        session_dict["structure"] = build_structure(cfg.structure, cfg.segment)
 
     # Add the speakers for each session
     speakers_df = pd.read_csv(cfg.speaker.libri_index_file)
@@ -111,14 +110,15 @@ def main(cfg):
     # Generate the scenes
     for session_dict in tqdm(master, "Generating scenes"):
         speaker_ids = session_dict["speakers"]
+        sample_rate = session_dict["sample_rate"]
         speakers = make_libri_speakers(
             cfg.speaker.libri_index_file, speaker_ids, cfg.speaker.offset_scale
         )
         structure = session_dict["structure"]
-        session_dict["scene"] = generate_scene(structure, speakers)
+        session_dict["scene"] = generate_scene(structure, speakers, sample_rate)
 
     logging.info("Saving master json file.")
-    with open(cfg.master_file, "w", encoding="utf8") as f:
+    with open(cfg.paths.master_file, "w", encoding="utf8") as f:
         json.dump(master, f, indent=2)
 
 

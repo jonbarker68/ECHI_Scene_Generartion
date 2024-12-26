@@ -1,0 +1,3 @@
+_target_: src.config.SegmenterConfig
+aggressiveness: 1
+wavfile: "*.flac"

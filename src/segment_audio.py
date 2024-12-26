@@ -2,8 +2,11 @@
 
 i.e., a longer speech recording with non-speech pauses is turned into a sequence
 of end-pointed speech segments.
+Adapted from https://github.com/wiseman/py-webrtcvad
 
-Adapted from https://github.com/wiseman/py-webrtcvad"""
+useage:
+python src/segment_audio.py +input_dir=/path/to/audio +output_dir=/path/to/output
+"""
 
 import collections
 from pathlib import Path
@@ -164,17 +167,17 @@ def process_audio(wavfile, aggressiveness, output_file_root):
         write_flac(output_file, segment, sample_rate)
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="segment_audio_config")
+@hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg):
     """Command-line entry point."""
 
     # Read and segment the audio
-    files = Path(cfg.input_dir).rglob(cfg.wavfile)
+    files = Path(cfg.input_dir).rglob(cfg.segmenter.wavfile)
     for file in tqdm(list(files)):
         # make directories if they don't exist
         output_file = Path(cfg.output_dir) / file.relative_to(cfg.input_dir)
         output_file.parent.mkdir(parents=True, exist_ok=True)
-        process_audio(file, cfg.aggressiveness, output_file.with_suffix(""))
+        process_audio(file, cfg.segmenter.aggressiveness, output_file.with_suffix(""))
 
 
 if __name__ == "__main__":

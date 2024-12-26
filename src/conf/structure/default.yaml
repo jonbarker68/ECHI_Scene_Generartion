@@ -1,0 +1,7 @@
+_target_: src.config.StructureConfig
+duration: 1800 # 30 minutes in seconds
+table_sizes: [4, 4, 4] # 3 tables of 4 speakers each
+
+segment: true
+half_life: 600 # 10 minutes in seconds
+min_duration: 60 # 1 minute minimum segment duration

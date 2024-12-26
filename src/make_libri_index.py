@@ -8,11 +8,11 @@ Example:
     python make_libri_index.py /path/to/LibriSpeech index.csv
 """
 
-import argparse
 import csv
 import logging
 from pathlib import Path
 
+import hydra
 import numpy as np
 import soundfile as sf  # type: ignore
 import webrtcvad  # type: ignore
@@ -156,26 +156,24 @@ def build_utterance_index(root: str) -> list[dict]:
     return file_data
 
 
-def main():
+@hydra.main(version_base=None, config_path="conf", config_name="config")
+def main(cfg):
     """Build an index for the LibriSpeech files."""
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("root", help="Root directory of LibriSpeech")
-    parser.add_argument("utt_index", help="Output index file")
-    parser.add_argument("chapter_index", help="Output index file")
-    args = parser.parse_args()
-
-    utterance_index = build_utterance_index(args.root)
+    # cfg = hydra.utils.instantiate(cfg.paths)
+    print("xxx")
+    print(cfg)
+    utterance_index = build_utterance_index(cfg.paths.libri_root)
     chapter_index = build_chapter_index(utterance_index)
 
     # print list of dict as a csv file
-    with open(args.utt_index, "w", encoding="utf8") as f:
+    with open(cfg.paths.utt_index, "w", encoding="utf8") as f:
         writer = csv.DictWriter(f, fieldnames=utterance_index[0].keys())
         writer.writeheader()
         writer.writerows(utterance_index)
 
     # print list of dict as a csv file
-    with open(args.chapter_index, "w", encoding="utf8") as f:
+    with open(cfg.paths.chapter_index, "w", encoding="utf8") as f:
         writer = csv.DictWriter(f, fieldnames=chapter_index[0].keys())
         writer.writeheader()
         writer.writerows(chapter_index)

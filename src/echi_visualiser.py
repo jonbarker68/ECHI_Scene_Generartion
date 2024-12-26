@@ -1,7 +1,7 @@
 """Script to visualise sessions from the ECHI master file using plotly.
 
-usage: python echi_visualiser.py session=SESSION_NAME
-e.g. python src/echi_visualiser.py session=session_001
+usage: python echi_visualiser.py +session=SESSION_NAME
+e.g. python src/echi_visualiser.py +session=session_001
 """
 
 import json
@@ -9,8 +9,6 @@ import json
 import hydra
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
-
-SAMPLE_RATE = 16000
 
 
 def get_element_duration(element):
@@ -24,6 +22,7 @@ def make_plot(session_dict, fig):
     """Make a plot of the session structure."""
 
     # Construct the conversation structure segment sequence
+    sample_rate = session_dict["sample_rate"]
     splits = session_dict["structure"]["elements"][0]["elements"]
     segments = []
     for sequences in splits:
@@ -80,8 +79,8 @@ def make_plot(session_dict, fig):
     # Add elements to illustrate the individual utterances
     for event in session_dict["scene"]:
         channel = event["channel"]
-        start_time = event["onset"] / SAMPLE_RATE
-        end_time = event["offset"] / SAMPLE_RATE
+        start_time = event["onset"] / sample_rate
+        end_time = event["offset"] / sample_rate
         fig.add_trace(
             go.Scatter(
                 x=[start_time, end_time],
@@ -119,11 +118,11 @@ def make_plot(session_dict, fig):
     return fig
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="echi_visualiser_config")
+@hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg):
     """Visualise the ECHI master file."""
 
-    with open(cfg.master_file, "r", encoding="utf8") as f:
+    with open(cfg.paths.master_file, "r", encoding="utf8") as f:
         master = json.load(f)
 
     # find the session called cfg.session

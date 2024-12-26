@@ -1,0 +1,4 @@
+_target_: src.config.SpeakerConfig
+offset_scale: 4000 # One second at 16kHz sampling rate
+libri_index_file: ${paths.data_root}/libri_index.csv
+min_speaker_duration: ${structure.duration} # Must have enough audio for full session

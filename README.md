@@ -25,7 +25,7 @@ Note that for most scripts there are hydra configurations that are set up so tha
 2. Build the LibriSpeech utterance index.
 
    ```bash
-   python src/make_libri_index.py data/LibriSpeech/train-clean-100 data/libri_index.csv data/libri_chapters.csv
+   python src/make_libri_index.py
    ```
 
 3. Generate the master session file.
