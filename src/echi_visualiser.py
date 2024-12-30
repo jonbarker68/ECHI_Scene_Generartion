@@ -10,6 +10,8 @@ import hydra
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
 
+from conf import Config
+
 
 def get_element_duration(element):
     """Get the duration of an element."""
@@ -119,7 +121,7 @@ def make_plot(session_dict, fig):
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def main(cfg):
+def main(cfg: Config) -> None:
     """Visualise the ECHI master file."""
 
     with open(cfg.paths.master_file, "r", encoding="utf8") as f:

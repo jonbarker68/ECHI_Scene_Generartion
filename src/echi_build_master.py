@@ -8,11 +8,13 @@ import functools
 import json
 import logging
 import random
+from typing import Any, Dict
 
 import hydra
 import pandas as pd
 from tqdm import tqdm
 
+from conf import Config
 from echi_scene_generator import generate_scene, make_libri_speakers
 from echi_structure_generator import exponential_segmenter, make_parallel_conversations
 
@@ -41,7 +43,7 @@ def make_speaker_lists(speakers_df, n_speakers_per_session, min_duration=0):
     return speaker_lists
 
 
-def add_speakers_to_master(master, speakers_df):
+def add_speakers_to_master(master, speakers_df) -> list[dict]:
     """Add speaker ids to the master json."""
     master = copy.deepcopy(master)
     n_speakers_per_session = [
@@ -58,16 +60,16 @@ def add_speakers_to_master(master, speakers_df):
     return master
 
 
-def build_structure(structure_cfg, seg_controls):
+def build_structure(structure_cfg):
     # The strategy used for segmenting conversations
 
     segmenter = (
         functools.partial(
             exponential_segmenter,
-            half_life=seg_controls.half_life,
-            min_duration=seg_controls.min_duration,
+            half_life=structure_cfg.half_life,
+            min_duration=structure_cfg.min_duration,
         )
-        if seg_controls.segment
+        if structure_cfg.segment
         else None
     )
 
@@ -81,7 +83,7 @@ def build_structure(structure_cfg, seg_controls):
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def main(cfg):
+def main(cfg: Config) -> None:
     """Build the ECHI master file."""
 
     n_sessions = cfg.master.n_sessions
@@ -101,7 +103,7 @@ def main(cfg):
     # Build a structure for each session
     for session_dict in tqdm(master, "Building scene structures"):
         session_dict["duration"] = cfg.structure.duration
-        session_dict["structure"] = build_structure(cfg.structure, cfg.segment)
+        session_dict["structure"] = build_structure(cfg.structure)
 
     # Add the speakers for each session
     speakers_df = pd.read_csv(cfg.speaker.libri_index_file)
@@ -114,7 +116,7 @@ def main(cfg):
         speakers = make_libri_speakers(
             cfg.speaker.libri_index_file, speaker_ids, cfg.speaker.offset_scale
         )
-        structure = session_dict["structure"]
+        structure: Dict[str, Any] = session_dict["structure"]  # type: ignore
         session_dict["scene"] = generate_scene(structure, speakers, sample_rate)
 
     logging.info("Saving master json file.")

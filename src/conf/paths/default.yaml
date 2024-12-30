@@ -1,9 +1,11 @@
-_target_: src.config.PathConfig
-
 data_root: ./data
 
-libri_root: ${paths.data_root}/LibriSpeech/train-clean-100
+corpus_root: ${paths.data_root}/LibriSpeech
+segmenter_outdir: ${paths.data_root}/LibriSpeech_segmented
 utt_index: ${paths.data_root}/libri_index.csv
 chapter_index: ${paths.data_root}/libri_chapters.csv
 master_file: ${paths.data_root}/master.json
+scene_file: ${paths.data_root}/scene.json
+structure_file: ${paths.data_root}/structure.json
 audio_dir: ${paths.data_root}/echi_audio
+audio_file: ${paths.audio_dir}/echi_audio.wav

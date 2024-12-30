@@ -17,6 +17,8 @@ import soundfile as sf  # type: ignore
 import webrtcvad  # type: ignore
 from tqdm import tqdm
 
+from conf import Config
+
 
 def read_flac(path):
     """Reads an audio file (WAV or FLAC).
@@ -168,14 +170,16 @@ def process_audio(wavfile, aggressiveness, output_file_root):
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def main(cfg):
+def main(cfg: Config) -> None:
     """Command-line entry point."""
 
     # Read and segment the audio
-    files = Path(cfg.input_dir).rglob(cfg.segmenter.wavfile)
+    files = Path(cfg.paths.corpus_root).rglob(cfg.segmenter.wavfile)
     for file in tqdm(list(files)):
         # make directories if they don't exist
-        output_file = Path(cfg.output_dir) / file.relative_to(cfg.input_dir)
+        output_file = Path(cfg.paths.segmenter_outdir) / file.relative_to(
+            cfg.paths.corpus_root
+        )
         output_file.parent.mkdir(parents=True, exist_ok=True)
         process_audio(file, cfg.segmenter.aggressiveness, output_file.with_suffix(""))
 

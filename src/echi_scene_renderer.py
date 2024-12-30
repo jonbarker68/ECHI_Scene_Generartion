@@ -19,6 +19,7 @@ import soundfile as sf  # type: ignore
 from tqdm import tqdm
 
 from babble_generator import generate_babble
+from conf import Config
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +87,7 @@ def channel_normalization(audio, target_rms, clip=True):
 def process_scene(
     scene,
     audio_root,
-    audio_out_filename,
+    audio_out_filename: Path,
     target_rms,
     sample_rate,
     n_diffuse_channels=0,
@@ -121,7 +122,7 @@ def process_scene(
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def main(cfg):
+def main(cfg: Config) -> None:
     """Render the scene description into an audio signal."""
 
     # Load the scene description
@@ -136,17 +137,17 @@ def main(cfg):
     else:
         # ...this is a single scene.
         scenes = [input_data]
-        outfile_names = [cfg.audio_out_filename]
+        outfile_names = [cfg.paths.audio_file]
 
     # Add path to the output filenames
-    outfile_names = [Path(cfg.paths.audio_dir) / name for name in outfile_names]
+    outfile_fullnames = [Path(cfg.paths.audio_dir) / name for name in outfile_names]
 
     # Create a babble generator if needed
     babble_generator = (
         partial(
             generate_babble,
             speech_index=pd.read_csv(cfg.paths.utt_index),
-            utterance_root=cfg.paths.libri_root,
+            utterance_root=cfg.paths.corpus_root,
             n_speakers=cfg.diffuse.n_speaker_babble,
         )
         if cfg.diffuse.n_channels > 0
@@ -154,11 +155,13 @@ def main(cfg):
     )
 
     # Run the rendering process for each scene
-    for scene, outfile_name in tqdm(zip(scenes, outfile_names), "Processing sessions"):
+    for scene, outfile_fullname in tqdm(
+        zip(scenes, outfile_fullnames), "Processing sessions"
+    ):
         process_scene(
             scene,
-            cfg.paths.libri_root,
-            outfile_name,
+            cfg.paths.corpus_root,
+            outfile_fullname,
             cfg.audio.target_rms,
             cfg.audio.sample_rate,
             cfg.diffuse.n_channels,

@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "colorlog",
         "cumsum",
         "dtick",
         "echi",
@@ -7,6 +8,7 @@
         "hoverinfo",
         "libri",
         "librispeech",
+        "multirun",
         "newaxis",
         "showlegend",
         "spkr",

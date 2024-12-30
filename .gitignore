@@ -3,6 +3,7 @@ outputs/
 tmp/
 bin/
 data/
+*.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

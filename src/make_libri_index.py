@@ -18,6 +18,7 @@ import soundfile as sf  # type: ignore
 import webrtcvad  # type: ignore
 from tqdm import tqdm
 
+from conf import Config
 from librispeech_utils import parse_file_name
 
 
@@ -157,13 +158,10 @@ def build_utterance_index(root: str) -> list[dict]:
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def main(cfg):
+def main(cfg: Config) -> None:
     """Build an index for the LibriSpeech files."""
 
-    # cfg = hydra.utils.instantiate(cfg.paths)
-    print("xxx")
-    print(cfg)
-    utterance_index = build_utterance_index(cfg.paths.libri_root)
+    utterance_index = build_utterance_index(cfg.paths.corpus_root)
     chapter_index = build_chapter_index(utterance_index)
 
     # print list of dict as a csv file

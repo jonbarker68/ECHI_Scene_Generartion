@@ -13,6 +13,8 @@ import pandas as pd
 import soundfile as sf  # type: ignore
 from tqdm import tqdm
 
+from conf import Config
+
 
 def make_base_stream(speech_index, utterance_root, duration):
     """Make a stream of segments from a single speaker.
@@ -71,17 +73,14 @@ def generate_babble(
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def main(cfg):
+def main(cfg: Config) -> None:
     """Generate N speaker babble"""
-
-    if "output_file" not in cfg or not cfg.output_file:
-        raise ValueError("output_file not set in config")
 
     speech_index = pd.read_csv(cfg.paths.utt_index)
 
     babble = generate_babble(
         speech_index,
-        cfg.paths.libri_root,
+        cfg.paths.corpus_root,
         cfg.structure.duration * cfg.audio.sample_rate,
         cfg.diffuse.n_speaker_babble,
         cfg.structure.duration * 4 * cfg.audio.sample_rate,
@@ -92,12 +91,12 @@ def main(cfg):
     rms_level = np.sqrt(np.mean(babble**2))
     babble = babble / rms_level * cfg.audio.target_rms
 
+    logging.info(f"Writing babble to {cfg.paths.audio_file}.")
     with sf.SoundFile(
-        cfg.output_file, "w", samplerate=cfg.audio.sample_rate, channels=1
+        cfg.paths.audio_file, "w", samplerate=cfg.audio.sample_rate, channels=1
     ) as f:
         f.write(babble)
 
 
 if __name__ == "__main__":
-    main()
     main()

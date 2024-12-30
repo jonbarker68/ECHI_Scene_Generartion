@@ -6,14 +6,17 @@ type scenarios. e.g. multiple independent conversations at
 a number of tables.
 
 Usage:
-python src/echi_structure_generator.py +output_file=echi_structure.json +seed=0
+python src/echi_structure_generator.py paths.structure_file=echi_structure.json seed=0
 """
 
 import functools
 import json
+import logging
 
 import hydra
 import numpy as np
+
+from conf import Config
 
 
 def exponential_segmenter(half_life, min_duration, duration):
@@ -109,10 +112,10 @@ def make_parallel_conversations(table_sizes, duration, segmenter=None):
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def main(cfg):
+def main(cfg: Config) -> None:
     """Build a random structure"""
 
-    if "seed" in cfg and cfg.seed is not None:
+    if cfg.seed is not None:
         np.random.seed(cfg.seed)
 
     # The strategy used for segmenting conversations
@@ -133,7 +136,8 @@ def main(cfg):
     )
 
     # write structure to file
-    with open(cfg.output_file, "w", encoding="utf8") as f:
+    logging.info(f"Writing structure to {cfg.paths.structure_file}.")
+    with open(cfg.paths.structure_file, "w", encoding="utf8") as f:
         json.dump(structure, f, indent=4)
 
 

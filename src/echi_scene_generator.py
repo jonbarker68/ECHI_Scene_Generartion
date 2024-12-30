@@ -3,7 +3,7 @@
 Reads a template file and instantiates it to make the low level scene file.
 
 usage:
-python src/echi_scene_generator.py +input_file=./test_data/echi_structure.json +output_file=scene.json +speaker_id="[150, 3240, 5463, 6437, 5022, 1553, 32, 6078, 8425, 6367, 8629, 1355]"
+python src/echi_scene_generator.py paths.structure_file=./test_data/echi_structure.json paths.scene_file=scene.json speaker.ids="[150, 3240, 5463, 6437, 5022, 1553, 32, 6078, 8425, 6367, 8629, 1355]"
 """
 
 import json
@@ -14,6 +14,8 @@ import hydra
 import numpy as np
 import pandas as pd
 from frozendict import frozendict
+
+from conf import Config
 
 logging.basicConfig()
 
@@ -186,18 +188,21 @@ def make_libri_speakers(libri_index_filename, selected_speakers, offset_scale=0)
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
-def main(cfg):
+def main(cfg: Config) -> None:
     """Instantiates the structure."""
-    logger.info(f"Instantiating {cfg.input_file} to make {cfg.output_file}")
+    logger.info(
+        f"Instantiating {cfg.paths.structure_file} to make {cfg.paths.scene_file}"
+    )
 
     speakers = make_libri_speakers(
-        cfg.paths.utt_index, cfg.speaker_ids, cfg.speaker.offset_scale
+        cfg.paths.utt_index, cfg.speaker.ids, cfg.speaker.offset_scale
     )
-    structure = json.load(open(cfg.input_file, "r", encoding="utf8"))
+    structure = json.load(open(cfg.paths.structure_file, "r", encoding="utf8"))
 
     scene = generate_scene(structure, speakers, cfg.audio.sample_rate)
 
-    save_scene(scene, cfg.output_file)
+    logging.info(f"Saving scene file to {cfg.paths.scene_file}.")
+    save_scene(scene, cfg.paths.scene_file)
 
 
 if __name__ == "__main__":

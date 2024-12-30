@@ -1,5 +1,6 @@
 defaults:
   - _self_
+  - base_config
   - master: default
   - audio: default
   - paths: default
@@ -10,10 +11,22 @@ defaults:
   - override hydra/job_logging: colorlog
   - override hydra/hydra_logging: colorlog
 
-output_file: ???
+seed: 0
+session: session_001 # Default session name
 
 hydra:
-  run:
+  job_logging:
+    root:
+      handlers: [file]
+    handlers:
+      file:
+        class: logging.FileHandler
+        formatter: simple
+        filename: logs/${hydra.job.name}.log
+    formatters:
+      simple:
+        format: "%(asctime)s - %(levelname)s - %(message)s"
+    run:
     dir: outputs/${now:%Y-%m-%d_%H-%M-%S}
   sweep:
     dir: multirun/${now:%Y-%m-%d_%H-%M-%S}
