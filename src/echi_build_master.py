@@ -15,7 +15,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from conf import Config
-from echi_scene_generator import generate_scene, make_libri_speakers
+from echi_scene_generator import generate_scene, make_speakers
 from echi_structure_generator import exponential_segmenter, make_parallel_conversations
 
 SAMPLE_RATE = 16000
@@ -110,12 +110,11 @@ def main(cfg: Config) -> None:
     master = add_speakers_to_master(master, speakers_df)
 
     # Generate the scenes
+    libri_index = pd.read_csv(cfg.speaker.libri_index_file)
     for session_dict in tqdm(master, "Generating scenes"):
         speaker_ids = session_dict["speakers"]
         sample_rate = session_dict["sample_rate"]
-        speakers = make_libri_speakers(
-            cfg.speaker.libri_index_file, speaker_ids, cfg.speaker.offset_scale
-        )
+        speakers = make_speakers(libri_index, speaker_ids, cfg.speaker.offset_scale)
         structure: Dict[str, Any] = session_dict["structure"]  # type: ignore
         session_dict["scene"] = generate_scene(structure, speakers, sample_rate)
 

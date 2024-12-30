@@ -175,12 +175,11 @@ def save_scene(scene, scene_file):
         json.dump(scene, f, indent=4)
 
 
-def make_libri_speakers(libri_index_filename, selected_speakers, offset_scale=0):
-    """Makes a list of speakers from the LibriSpeech dataset."""
-    libri_index = pd.read_csv(libri_index_filename)
+def make_speakers(utt_index, selected_speakers, offset_scale=0):
+    """Makes a list of speakers from the speech dataset."""
 
     spkr_dfs = [
-        libri_index[libri_index.speaker == spkr].sort_values(by="file_name")
+        utt_index[utt_index.speaker == spkr].sort_values(by="file_name")
         for spkr in selected_speakers
     ]
     speakers = [Speaker(spkr_df, offset_scale) for spkr_df in spkr_dfs]
@@ -194,9 +193,9 @@ def main(cfg: Config) -> None:
         f"Instantiating {cfg.paths.structure_file} to make {cfg.paths.scene_file}"
     )
 
-    speakers = make_libri_speakers(
-        cfg.paths.utt_index, cfg.speaker.ids, cfg.speaker.offset_scale
-    )
+    utt_index = pd.read_csv(cfg.paths.utt_index)
+
+    speakers = make_speakers(utt_index, cfg.speaker.ids, cfg.speaker.offset_scale)
     structure = json.load(open(cfg.paths.structure_file, "r", encoding="utf8"))
 
     scene = generate_scene(structure, speakers, cfg.audio.sample_rate)

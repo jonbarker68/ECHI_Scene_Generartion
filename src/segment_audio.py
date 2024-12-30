@@ -4,7 +4,7 @@ i.e., a longer speech recording with non-speech pauses is turned into a sequence
 of end-pointed speech segments.
 Adapted from https://github.com/wiseman/py-webrtcvad
 
-useage:
+usage:
 python src/segment_audio.py +input_dir=/path/to/audio +output_dir=/path/to/output
 """
 
